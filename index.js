@@ -56,6 +56,46 @@ function parseTodo(todo) {
     return { user, date, importance, text: todo };
 }
 
+function extractComment(todo) {
+    let comment = todo.replace(/\/\/ TODO\s*/, '');
+    
+    if (comment.includes(';')) {
+        comment = comment.split(';')[0].trim();
+    }
+ 
+    comment = comment.replace(/^!+\s*/, '');
+    
+    return comment;
+}
+
+function truncateAndPad(text, width) {
+    if (text.length > width) {
+        return text.substring(0, width - 3) + '...';
+    }
+    return text.padEnd(width);
+}
+
+function printTable(todos) {
+    todos.forEach(todo => {
+        const parsed = parseTodo(todo);
+
+        const importance = parsed.importance > 0 ? '!' : '';
+
+        const user = parsed.user ? parsed.user : '';
+
+        const date = parsed.date ? parsed.date.toISOString().split('T')[0] : '';
+
+        const comment = extractComment(todo);
+        
+        const col1 = truncateAndPad(importance, 1);
+        const col2 = truncateAndPad(user, 10);
+        const col3 = truncateAndPad(date, 10);
+        const col4 = truncateAndPad(comment, 50);
+        
+        console.log(`${col1}  | ${col2}  | ${col3}  | ${col4}`);
+    });
+}
+
 function processCommand(command) {
     const allTODO = processTODO();
     const parts = command.split(' ');
@@ -68,28 +108,31 @@ function processCommand(command) {
             break;
             
         case 'show':
-            allTODO.forEach(t => console.log(t));
+            printTable(allTODO);
             break;
             
         case 'important':
-            allTODO.forEach(t => {
-                if (t.includes('!')) console.log(t);
-            });
+            const importantTodos = allTODO.filter(t => t.includes('!'));
+            printTable(importantTodos);
             break;
             
         case 'user':
             if (!argument)
                 break;
             const searchUser = argument.toLowerCase();
-            allTODO.forEach(todo => {
+            const userTodos = allTODO.filter(todo => {
                 const p = parseTodo(todo);
-                if (p.user === searchUser) {
-                    console.log(todo);
-                }
+                return p.user === searchUser;
             });
+            printTable(userTodos);
             break;
 
         case 'date':
+            if (!argument) {
+                console.log('Please, specify date in format: yyyy, yyyy-mm, or yyyy-mm-dd');
+                break;
+            }
+            
             let filterDate;
             const dateParts = argument.split('-');
             
@@ -104,12 +147,11 @@ function processCommand(command) {
                 break;
             }
 
-            allTODO.forEach(todo => {
+            const dateTodos = allTODO.filter(todo => {
                 const parsed = parseTodo(todo);
-                if (parsed.date && parsed.date > filterDate) {
-                    console.log(todo);
-                }
+                return parsed.date && parsed.date > filterDate;
             });
+            printTable(dateTodos);
             break; 
 
         case 'sort':
@@ -140,7 +182,8 @@ function processCommand(command) {
                 });
             }
 
-            parsed.forEach(p => console.log(p.text));
+            const sortedTodos = parsed.map(p => p.text);
+            printTable(sortedTodos);
             break;
 
         default:
