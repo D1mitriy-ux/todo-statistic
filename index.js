@@ -28,21 +28,46 @@ function processTODO() {
 
 function processCommand(command) {
     const allTODO = processTODO();
-    switch (command) {
+
+    const parts = command.split(' ');
+    const action = parts[0];
+    const argument = parts[1];
+
+    switch (action) {
         case 'exit':
             process.exit(0);
             break;
-        case 'show':
 
+        case 'show':
             for (const todo of allTODO) {
                 console.log(todo);
             }
-
             break;
+
         case 'important':
-            const importantTODO = allTODO.filter(todo => todo.includes('!'))
+            const importantTODO = allTODO.filter(todo => todo.includes('!'));
             for (const todo of importantTODO) {
                 console.log(todo);
+            }
+            break;
+
+        case 'user':
+            if (!argument) {
+                console.log('Please, specify username');
+                break;
+            }
+
+            const userName = argument.toLowerCase();
+
+            for (const todo of allTODO) {
+                if (todo.includes(';')) {
+                    const todoParts = todo.split(';');
+                    const author = todoParts[0].substring(8).trim().toLowerCase();
+
+                    if (author === userName) {
+                        console.log(todo);
+                    }
+                }
             }
             break;
 
