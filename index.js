@@ -89,6 +89,29 @@ function processCommand(command) {
             });
             break;
 
+        case 'date':
+            let filterDate;
+            const dateParts = argument.split('-');
+            
+            if (dateParts.length === 1) {
+                filterDate = new Date(parseInt(dateParts[0]), 0, 1);
+            } else if (dateParts.length === 2) {
+                filterDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, 1);
+            } else if (dateParts.length === 3) {
+                filterDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+            } else {
+                console.log('Invalid date format');
+                break;
+            }
+
+            allTODO.forEach(todo => {
+                const parsed = parseTodo(todo);
+                if (parsed.date && parsed.date > filterDate) {
+                    console.log(todo);
+                }
+            });
+            break; 
+
         case 'sort':
             const parsed = allTODO.map(parseTodo);
 
