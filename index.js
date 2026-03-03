@@ -44,6 +44,7 @@ function processCommand(command) {
             for (const todo of importantTODO) {
                 console.log(todo);
             }
+            break;
 
         default:
             console.log('wrong command');
