@@ -26,9 +26,38 @@ function processTODO() {
     return allTodos;
 }
 
+
+function parseTodo(todo) {
+    let importance = 0;
+    for (let i = 0; i < todo.length; i++) {
+        if (todo[i] === '!') {
+            importance++;
+        }
+    }
+
+    let user = null;
+    let date = null;
+    if (todo.includes(';')) {
+        const parts = todo.split(';');
+        if (parts.length >= 3) {
+            const userName = parts[0].substring(8).trim().toLowerCase();
+            user = userName !== "" ? userName : null;
+
+            const dateStr = parts[1].trim();
+            if (dateStr !== "") {
+                const parsedDate = new Date(dateStr);
+                if (!isNaN(parsedDate.getTime())) {
+                    date = parsedDate;
+                }
+            }
+        }
+    }
+
+    return { user, date, importance, text: todo };
+}
+
 function processCommand(command) {
     const allTODO = processTODO();
-
     const parts = command.split(' ');
     const action = parts[0];
     const argument = parts[1];
@@ -37,38 +66,58 @@ function processCommand(command) {
         case 'exit':
             process.exit(0);
             break;
-
+            
         case 'show':
-            for (const todo of allTODO) {
-                console.log(todo);
-            }
+            allTODO.forEach(t => console.log(t));
             break;
-
+            
         case 'important':
-            const importantTODO = allTODO.filter(todo => todo.includes('!'));
-            for (const todo of importantTODO) {
-                console.log(todo);
-            }
+            allTODO.forEach(t => {
+                if (t.includes('!')) console.log(t);
+            });
+            break;
+            
+        case 'user':
+            if (!argument)
+                break;
+            const searchUser = argument.toLowerCase();
+            allTODO.forEach(todo => {
+                const p = parseTodo(todo);
+                if (p.user === searchUser) {
+                    console.log(todo);
+                }
+            });
             break;
 
-        case 'user':
-            if (!argument) {
-                console.log('Please, specify username');
-                break;
+        case 'sort':
+            const parsed = allTODO.map(parseTodo);
+
+            if (argument === 'importance') {
+                parsed.sort((a, b) => b.importance - a.importance);
+            }
+            
+            else if (argument === 'user') {
+                parsed.sort((a, b) => {
+                    if (a.user && b.user) return a.user.localeCompare(b.user);
+                    if (a.user) return -1;
+                    if (b.user) return 1;
+                    return 0;
+                });
+            }
+            
+            else if (argument === 'date') {
+                parsed.sort((a, b) => {
+                    if (a.date && b.date) 
+                        return b.date - a.date;
+                    if (a.date) 
+                        return -1;
+                    if (b.date) 
+                        return 1;
+                    return 0;
+                });
             }
 
-            const userName = argument.toLowerCase();
-
-            for (const todo of allTODO) {
-                if (todo.includes(';')) {
-                    const todoParts = todo.split(';');
-                    const author = todoParts[0].substring(8).trim().toLowerCase();
-
-                    if (author === userName) {
-                        console.log(todo);
-                    }
-                }
-            }
+            parsed.forEach(p => console.log(p.text));
             break;
 
         default:
