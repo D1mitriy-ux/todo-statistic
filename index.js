@@ -14,6 +14,7 @@ function getFiles() {
 function processTODO() {
     const TODOregEx = /\/\/ TODO .*/g;
     const allTodos = [];
+    const importantTODO = [];
 
     for (const fileContent of files) {
         const matches = fileContent.match(TODOregEx);
@@ -26,16 +27,23 @@ function processTODO() {
 }
 
 function processCommand(command) {
+    const allTODO = processTODO();
     switch (command) {
         case 'exit':
             process.exit(0);
             break;
         case 'show':
-            const todos = processTODO()
-            for (const todo of todos) {
+
+            for (const todo of allTODO) {
                 console.log(todo);
             }
+
             break;
+        case 'important':
+            const importantTODO = allTODO.filter(todo => todo.includes('!'))
+            for (const todo of importantTODO) {
+                console.log(todo);
+            }
 
         default:
             console.log('wrong command');
